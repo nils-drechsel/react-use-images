@@ -5,53 +5,66 @@ export type PreloadedImage = {
     state: string,
 }
 
-export const useImages = (urls: Array<string>, crossOrigin: string | null) => {
+export const useImages = (urls: Array<string | null> | object, crossOrigin: string | null) => {
 
     const initialState: Map<string, PreloadedImage> = new Map();
 
-    urls.filter(url => !!url)
-        .forEach((url: string) => initialState.set(url, { image: null, state: "loading" }));
+    const images: Map<string, string> = new Map();
+
+    if (urls instanceof Array) {
+        urls.filter(url => !!url)
+            .forEach(url => images.set(url!, url!));
+    } else {
+        Object.keys(urls)
+            .filter(key => key in urls)
+            .forEach(key => images.set(key, (urls as any)[key]))
+    }
+
+    images.forEach((url, key) => initialState.set(key, { image: null, state: "loading" }));
 
     const [imagestates, setImageState] = useState(initialState);
 
+    console.log("images: ", images);
+    console.log("imagestates: ", imagestates);
+
     useEffect(() => {
 
-        urls.filter(url => !!url)
-            .forEach(url => {
-                const img = document.createElement("Img") as HTMLImageElement;
-                img.onload = () => {
-                    setImageState((state: Map<string, PreloadedImage>) => {
-                        const newState = new Map(state);
-                        newState.set(url, { image: img, state: "loaded" });
-                        return newState;
-                    })
-                }
+        images.forEach((url, key) => {
+            const img = document.createElement("Img") as HTMLImageElement;
+            img.onload = () => {
+                setImageState((state: Map<string, PreloadedImage>) => {
+                    const newState = new Map(state);
+                    newState.set(key, { image: img, state: "loaded" });
+                    return newState;
+                })
+            }
 
-                img.onerror = () => {
-                    setImageState((state: Map<string, PreloadedImage>) => {
-                        const newState = new Map(state);
-                        newState.set(url, { image: null, state: "error" });
-                        return newState;
-                    })
-                }
+            img.onerror = () => {
+                setImageState((state: Map<string, PreloadedImage>) => {
+                    const newState = new Map(state);
+                    newState.set(key, { image: null, state: "error" });
+                    return newState;
+                })
+            }
 
-                if (crossOrigin) img.crossOrigin = crossOrigin;
-                img.src = url;
+            if (crossOrigin) img.crossOrigin = crossOrigin;
+            img.src = url;
 
-            });
+        });
 
         return () => {
-            urls.filter(url => !!url)
-                .forEach(url => {
-                    const img = imagestates.get(url)!.image!;
+            images.forEach((url, key) => {
+                const img = imagestates.get(key)!.image!;
+                if (img) {
                     img.onload = null;
                     img.onerror = null;
-                })
+                }
+            })
         }
 
 
 
-    }, [urls, crossOrigin]);
+    }, []);
 
     return imagestates;
 }

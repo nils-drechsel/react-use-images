@@ -2,12 +2,14 @@ import React, { FunctionComponent, isValidElement, cloneElement, ReactElement } 
 import { useImages } from "./useImages";
 
 interface Props {
-    urls: Array<string>,
-    crossOrigin?: string,
-    Waiting?: any,
-    Error?: any,
+    urls: Array<string | null> | object,
+    crossOrigin?: string | null,
+    Waiting?: ReactElement<{ loading: Array<string>, loaded: Array<string> }> | null,
+    Error?: ReactElement<{ invalid: Array<string> }> | null,
     children?: any,
 }
+
+
 
 
 
@@ -16,23 +18,48 @@ export const PreloadImages: FunctionComponent<Props> = (props: Props) => {
 
     const imageStates = useImages(props.urls, props.crossOrigin || null);
 
-    const allLoaded = props.urls.filter(url => !!url).every(url => imageStates.get(url)!.state === "loaded");
-    const error = props.urls.filter(url => !!url).some(url => imageStates.get(url)!.state === "error");
+    const getKeysWithState = (state: string) => {
+        return Array.from(imageStates.keys())
+            .filter(key => imageStates.get(key)!.state === state);
+    }
+
+
+    const allLoaded =
+        Array.from(imageStates.values())
+            .every(image => image.state === "loaded");
+
+    const error =
+        Array.from(imageStates.values())
+            .some(image => image.state === "error");
 
 
     if (error) {
+        const invalidUrls = getKeysWithState("error");
+
+
         if (props.Error) {
             const Error: any = props.Error;
-            return (<Error />)
+            return (
+                <Error
+                    invalid={invalidUrls}
+                />
+            )
         } else {
             return null;
         }
     }
 
     if (!allLoaded) {
+        const loading = getKeysWithState("loading");
+        const loaded = getKeysWithState("loaded");
         if (props.Waiting) {
             const Waiting: any = props.Waiting;
-            return (<Waiting />)
+            return (
+                <Waiting
+                    loading={loading}
+                    loaded={loaded}
+                />
+            )
         } else {
             return null;
         }
