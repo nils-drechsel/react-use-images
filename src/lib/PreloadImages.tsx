@@ -1,12 +1,12 @@
 import React, { FunctionComponent, isValidElement, cloneElement, ReactElement } from 'react';
-import { useImages } from "./useImages";
+import { useImages, PreloadedState } from "./useImages";
+import { ImageContext } from "./ImageContext";
 
-interface Props {
+type Props = {
     urls: Array<string | null> | object,
     crossOrigin?: string | null,
-    Waiting?: ReactElement<{ loading: Array<string>, loaded: Array<string> }> | null,
-    Error?: ReactElement<{ invalid: Array<string> }> | null,
-    children?: any,
+    Waiting?: any,
+    Error?: any,
 }
 
 
@@ -14,11 +14,11 @@ interface Props {
 
 
 
-export const PreloadImages: FunctionComponent<Props> = (props: Props) => {
+export const PreloadImages: FunctionComponent<Props> = ({ urls, crossOrigin, Waiting, Error, children }) => {
 
-    const imageStates = useImages(props.urls, props.crossOrigin || null);
+    const imageStates = useImages(urls, crossOrigin || null);
 
-    const getKeysWithState = (state: string) => {
+    const getKeysWithState = (state: PreloadedState) => {
         return Array.from(imageStates.keys())
             .filter(key => imageStates.get(key)!.state === state);
     }
@@ -26,19 +26,19 @@ export const PreloadImages: FunctionComponent<Props> = (props: Props) => {
 
     const allLoaded =
         Array.from(imageStates.values())
-            .every(image => image.state === "loaded");
+            .filter(image => image.state !== PreloadedState.NULL)
+            .every(image => image.state === PreloadedState.LOADED);
 
     const error =
         Array.from(imageStates.values())
-            .some(image => image.state === "error");
+            .some(image => image.state === PreloadedState.ERROR);
 
 
     if (error) {
-        const invalidUrls = getKeysWithState("error");
+        const invalidUrls = getKeysWithState(PreloadedState.ERROR);
 
 
-        if (props.Error) {
-            const Error: any = props.Error;
+        if (Error) {
             return (
                 <Error
                     invalid={invalidUrls}
@@ -50,10 +50,9 @@ export const PreloadImages: FunctionComponent<Props> = (props: Props) => {
     }
 
     if (!allLoaded) {
-        const loading = getKeysWithState("loading");
-        const loaded = getKeysWithState("loaded");
-        if (props.Waiting) {
-            const Waiting: any = props.Waiting;
+        const loading = getKeysWithState(PreloadedState.LOADING);
+        const loaded = getKeysWithState(PreloadedState.LOADED);
+        if (Waiting) {
             return (
                 <Waiting
                     loading={loading}
@@ -66,29 +65,12 @@ export const PreloadImages: FunctionComponent<Props> = (props: Props) => {
     }
 
 
-    const childrenWithProps = React.Children.map(props.children, child => {
-
-
-        const newProps = Object.assign({}, props, { imageStates });
-        if (newProps.urls) delete newProps.urls;
-        if (newProps.crossOrigin) delete newProps.crossOrigin;
-        if (newProps.Waiting) delete newProps.Waiting;
-        if (newProps.Error) delete newProps.Error;
-        if (newProps.children) delete newProps.children;
-
-
-        if (isValidElement(child)) {
-            return cloneElement(child, newProps);
-        }
-
-        return child;
-    });
 
 
     return (
-        <div>
-            {childrenWithProps}
-        </div>
+        <ImageContext.Provider value={imageStates}>
+            {children}
+        </ImageContext.Provider>
     )
 
 }

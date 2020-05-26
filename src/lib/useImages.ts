@@ -2,7 +2,14 @@ import { useEffect, useState } from 'react';
 
 export type PreloadedImage = {
     image: HTMLImageElement | null,
-    state: string,
+    state: PreloadedState,
+}
+
+export enum PreloadedState {
+    LOADING,
+    LOADED,
+    ERROR,
+    NULL,
 }
 
 export const useImages = (urls: Array<string | null> | object, crossOrigin: string | null) => {
@@ -20,21 +27,19 @@ export const useImages = (urls: Array<string | null> | object, crossOrigin: stri
             .forEach(key => images.set(key, (urls as any)[key]))
     }
 
-    images.forEach((url, key) => initialState.set(key, { image: null, state: "loading" }));
+    images.forEach((url, key) => initialState.set(key, { image: null, state: url ? PreloadedState.LOADING : PreloadedState.NULL }));
 
     const [imagestates, setImageState] = useState(initialState);
-
-    console.log("images: ", images);
-    console.log("imagestates: ", imagestates);
 
     useEffect(() => {
 
         images.forEach((url, key) => {
+            if (!url) return;
             const img = document.createElement("Img") as HTMLImageElement;
             img.onload = () => {
                 setImageState((state: Map<string, PreloadedImage>) => {
                     const newState = new Map(state);
-                    newState.set(key, { image: img, state: "loaded" });
+                    newState.set(key, { image: img, state: PreloadedState.LOADED });
                     return newState;
                 })
             }
@@ -42,7 +47,7 @@ export const useImages = (urls: Array<string | null> | object, crossOrigin: stri
             img.onerror = () => {
                 setImageState((state: Map<string, PreloadedImage>) => {
                     const newState = new Map(state);
-                    newState.set(key, { image: null, state: "error" });
+                    newState.set(key, { image: null, state: PreloadedState.ERROR });
                     return newState;
                 })
             }
@@ -54,6 +59,7 @@ export const useImages = (urls: Array<string | null> | object, crossOrigin: stri
 
         return () => {
             images.forEach((url, key) => {
+                if (!url) return;
                 const img = imagestates.get(key)!.image!;
                 if (img) {
                     img.onload = null;
