@@ -1,5 +1,5 @@
 import React, { FunctionComponent, isValidElement, cloneElement, ReactElement } from 'react';
-import { useImages, PreloadedState } from "./useImages";
+import { useImages, PreloadedState, PreloadedImage } from "./useImages";
 import { ImageContext } from "./ImageContext";
 
 type Props = {

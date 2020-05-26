@@ -1,6 +1,7 @@
 export declare type PreloadedImage = {
     image: HTMLImageElement | null;
     state: PreloadedState;
+    url: string | null;
 };
 export declare enum PreloadedState {
     LOADING = 0,

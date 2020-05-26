@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react';
 export type PreloadedImage = {
     image: HTMLImageElement | null,
     state: PreloadedState,
+    url: string | null,
 }
 
 export enum PreloadedState {
@@ -12,10 +13,7 @@ export enum PreloadedState {
     NULL,
 }
 
-export const useImages = (urls: Array<string | null> | object, crossOrigin: string | null) => {
-
-    const initialState: Map<string, PreloadedImage> = new Map();
-
+const createImageMap = (urls: Array<string | null> | object) => {
     const images: Map<string, string> = new Map();
 
     if (urls instanceof Array) {
@@ -27,19 +25,38 @@ export const useImages = (urls: Array<string | null> | object, crossOrigin: stri
             .forEach(key => images.set(key, (urls as any)[key]))
     }
 
-    images.forEach((url, key) => initialState.set(key, { image: null, state: url ? PreloadedState.LOADING : PreloadedState.NULL }));
+    return images;
+}
 
+
+export const useImages = (urls: Array<string | null> | object, crossOrigin: string | null) => {
+
+    const initialState: Map<string, PreloadedImage> = new Map();
+
+    const images = createImageMap(urls);
+
+    const setInitialState = (initialState: Map<string, PreloadedImage>, images: Map<string, string>) => {
+        images.forEach((url, key) => initialState.set(key, { image: null, state: url ? PreloadedState.LOADING : PreloadedState.NULL, url: url }));
+    }
+
+    setInitialState(initialState, images);
     const [imagestates, setImageState] = useState(initialState);
 
     useEffect(() => {
 
+        const initialState: Map<string, PreloadedImage> = new Map();
+        const images = createImageMap(urls);
+
+        setInitialState(initialState, images);
+        setImageState(initialState);
+
         images.forEach((url, key) => {
             if (!url) return;
-            const img = document.createElement("Img") as HTMLImageElement;
+            const img = document.createElement("img") as HTMLImageElement;
             img.onload = () => {
                 setImageState((state: Map<string, PreloadedImage>) => {
                     const newState = new Map(state);
-                    newState.set(key, { image: img, state: PreloadedState.LOADED });
+                    newState.set(key, { image: img, state: PreloadedState.LOADED, url: url });
                     return newState;
                 })
             }
@@ -47,7 +64,7 @@ export const useImages = (urls: Array<string | null> | object, crossOrigin: stri
             img.onerror = () => {
                 setImageState((state: Map<string, PreloadedImage>) => {
                     const newState = new Map(state);
-                    newState.set(key, { image: null, state: PreloadedState.ERROR });
+                    newState.set(key, { image: null, state: PreloadedState.ERROR, url: url });
                     return newState;
                 })
             }
@@ -56,6 +73,7 @@ export const useImages = (urls: Array<string | null> | object, crossOrigin: stri
             img.src = url;
 
         });
+
 
         return () => {
             images.forEach((url, key) => {
@@ -70,7 +88,7 @@ export const useImages = (urls: Array<string | null> | object, crossOrigin: stri
 
 
 
-    }, []);
+    }, [urls, crossOrigin]);
 
     return imagestates;
 }
