@@ -1,4 +1,6 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
+import { shallowEqual } from "fast-equals"
+
 
 export type PreloadedImage = {
     image: HTMLImageElement | null,
@@ -28,27 +30,24 @@ const createImageMap = (urls: Array<string | null> | object) => {
     return images;
 }
 
+const getInitialState = (images: Map<string, string>): Map<string, PreloadedImage> => {
+    const initialState: Map<string, PreloadedImage> = new Map();
+    images.forEach((url, key) => initialState.set(key, { image: null, state: url ? PreloadedState.LOADING : PreloadedState.NULL, url: url }));
+    return initialState;
+}
+
 
 export const useImages = (urls: Array<string | null> | object, crossOrigin: string | null) => {
 
     const initialState: Map<string, PreloadedImage> = new Map();
 
-    const images = createImageMap(urls);
+    const [images, setImages] = useState(createImageMap(urls));
+    const prevUrlsRef = useRef(null as Array<string | null> | object | null);
 
-    const setInitialState = (initialState: Map<string, PreloadedImage>, images: Map<string, string>) => {
-        images.forEach((url, key) => initialState.set(key, { image: null, state: url ? PreloadedState.LOADING : PreloadedState.NULL, url: url }));
-    }
 
-    setInitialState(initialState, images);
-    const [imagestates, setImageState] = useState(initialState);
+    const [imagestates, setImageState] = useState(getInitialState(images));
 
     useEffect(() => {
-
-        const initialState: Map<string, PreloadedImage> = new Map();
-        const images = createImageMap(urls);
-
-        setInitialState(initialState, images);
-        setImageState(initialState);
 
         images.forEach((url, key) => {
             if (!url) return;
@@ -88,7 +87,25 @@ export const useImages = (urls: Array<string | null> | object, crossOrigin: stri
 
 
 
-    }, [urls, crossOrigin]);
+    }, [images, crossOrigin]);
+
+
+
+
+    useEffect(() => {
+        if (!shallowEqual(prevUrlsRef.current, urls)) {
+            prevUrlsRef.current = urls;
+            setImages(createImageMap(urls));
+            setImageState(getInitialState(images));
+        }
+
+    }, [urls])
+
+
+
+
+
+
 
     return imagestates;
 }
