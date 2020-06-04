@@ -15,7 +15,7 @@ export enum PreloadedState {
     NULL,
 }
 
-const createImageMap = (urls: Array<string | null> | object) => {
+export const createImageMap = (urls: Array<string | null> | object) => {
     const images: Map<string, string> = new Map();
 
     if (urls instanceof Array) {
@@ -30,7 +30,7 @@ const createImageMap = (urls: Array<string | null> | object) => {
     return images;
 }
 
-const getInitialState = (images: Map<string, string>): Map<string, PreloadedImage> => {
+export const getInitialState = (images: Map<string, string>): Map<string, PreloadedImage> => {
     const initialState: Map<string, PreloadedImage> = new Map();
     images.forEach((url, key) => initialState.set(key, { image: null, state: url ? PreloadedState.LOADING : PreloadedState.NULL, url: url }));
     return initialState;
