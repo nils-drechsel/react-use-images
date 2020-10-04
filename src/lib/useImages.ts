@@ -109,3 +109,9 @@ export const useImages = (urls: Array<string | null> | object, crossOrigin: stri
 
     return imagestates;
 }
+
+
+export const isEncodedImage = (url: string | null): boolean => {
+    if (!url) return false;
+    return url.startsWith("data:image");
+}
