@@ -9,7 +9,7 @@ export declare enum PreloadedState {
     ERROR = 2,
     NULL = 3
 }
-export declare const createImageMap: (urls: object | (string | null)[]) => Map<string, string>;
+export declare const createImageMap: (urls: Array<string | null> | object) => Map<string, string>;
 export declare const getInitialState: (images: Map<string, string>) => Map<string, PreloadedImage>;
-export declare const useImages: (urls: object | (string | null)[], crossOrigin: string | null) => Map<string, PreloadedImage>;
+export declare const useImages: (urls: Array<string | null> | object, crossOrigin: string | null) => Map<string, PreloadedImage>;
 export declare const isEncodedImage: (url: string | null) => boolean;

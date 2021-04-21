@@ -1,6 +1,6 @@
 {
   "name": "react-use-images",
-  "version": "1.0.1",
+  "version": "1.1.0",
   "description": "",
   "main": "lib/index.js",
   "scripts": {
@@ -12,16 +12,16 @@
     "url": "git+https://github.com/nils-drechsel/react-use-images.git"
   },
   "author": "Nils J. D. Drechsel",
-  "license": "ISC",
+  "license": "MIT",
   "bugs": {
     "url": "https://github.com/nils-drechsel/react-use-images/issues"
   },
   "homepage": "https://github.com/nils-drechsel/react-use-images#readme",
   "devDependencies": {
-    "@types/react": "^16.9.34",
-    "typescript": "^3.8.3"
+    "@types/react": "17.0.3",
+    "typescript": "4.2.3"
   },
   "dependencies": {
-    "fast-equals": "^2.0.0"
+    "fast-equals": "2.0.0"
   }
 }
